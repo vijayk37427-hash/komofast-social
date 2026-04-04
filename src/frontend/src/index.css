@@ -1,0 +1,182 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Force dark mode - Komofast Social is dark-only */
+  :root {
+    --radius: 0.875rem;
+    color-scheme: dark;
+
+    /* Background */
+    --background: 0.1 0.012 244;
+    --foreground: 0.93 0.01 244;
+
+    /* Cards / surfaces */
+    --card: 0.18 0.015 244;
+    --card-foreground: 0.93 0.01 244;
+
+    /* Popover */
+    --popover: 0.21 0.016 246;
+    --popover-foreground: 0.93 0.01 244;
+
+    /* Primary = accent blue */
+    --primary: 0.6 0.2 258;
+    --primary-foreground: 0.98 0 0;
+
+    /* Secondary = surface-2 */
+    --secondary: 0.21 0.016 246;
+    --secondary-foreground: 0.93 0.01 244;
+
+    /* Muted */
+    --muted: 0.18 0.015 244;
+    --muted-foreground: 0.72 0.013 244;
+
+    /* Accent */
+    --accent: 0.25 0.016 244;
+    --accent-foreground: 0.93 0.01 244;
+
+    /* Destructive (like-red) */
+    --destructive: 0.63 0.22 17;
+    --destructive-foreground: 0.98 0 0;
+
+    /* Border / Input / Ring */
+    --border: 0.27 0.016 244;
+    --input: 0.27 0.016 244;
+    --ring: 0.6 0.2 258;
+
+    /* Charts */
+    --chart-1: 0.6 0.2 258;
+    --chart-2: 0.58 0.27 300;
+    --chart-3: 0.68 0.19 248;
+    --chart-4: 0.63 0.22 17;
+    --chart-5: 0.56 0.23 263;
+
+    /* Sidebar */
+    --sidebar: 0.15 0.013 244;
+    --sidebar-foreground: 0.93 0.01 244;
+    --sidebar-primary: 0.6 0.2 258;
+    --sidebar-primary-foreground: 0.98 0 0;
+    --sidebar-accent: 0.21 0.016 246;
+    --sidebar-accent-foreground: 0.93 0.01 244;
+    --sidebar-border: 0.27 0.016 244;
+    --sidebar-ring: 0.6 0.2 258;
+  }
+
+  /* Same values - dark only app */
+  .dark {
+    --background: 0.1 0.012 244;
+    --foreground: 0.93 0.01 244;
+    --card: 0.18 0.015 244;
+    --card-foreground: 0.93 0.01 244;
+    --popover: 0.21 0.016 246;
+    --popover-foreground: 0.93 0.01 244;
+    --primary: 0.6 0.2 258;
+    --primary-foreground: 0.98 0 0;
+    --secondary: 0.21 0.016 246;
+    --secondary-foreground: 0.93 0.01 244;
+    --muted: 0.18 0.015 244;
+    --muted-foreground: 0.72 0.013 244;
+    --accent: 0.25 0.016 244;
+    --accent-foreground: 0.93 0.01 244;
+    --destructive: 0.63 0.22 17;
+    --destructive-foreground: 0.98 0 0;
+    --border: 0.27 0.016 244;
+    --input: 0.27 0.016 244;
+    --ring: 0.6 0.2 258;
+    --chart-1: 0.6 0.2 258;
+    --chart-2: 0.58 0.27 300;
+    --chart-3: 0.68 0.19 248;
+    --chart-4: 0.63 0.22 17;
+    --chart-5: 0.56 0.23 263;
+    --sidebar: 0.15 0.013 244;
+    --sidebar-foreground: 0.93 0.01 244;
+    --sidebar-primary: 0.6 0.2 258;
+    --sidebar-primary-foreground: 0.98 0 0;
+    --sidebar-accent: 0.21 0.016 246;
+    --sidebar-accent-foreground: 0.93 0.01 244;
+    --sidebar-border: 0.27 0.016 244;
+    --sidebar-ring: 0.6 0.2 258;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  /* Gradient utilities */
+  .komo-gradient {
+    background: linear-gradient(135deg, #2fa8ff 0%, #a855f7 100%);
+  }
+  .komo-gradient-text {
+    background: linear-gradient(135deg, #2fa8ff 0%, #a855f7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .komo-gradient-border {
+    background: linear-gradient(#1a1f26, #1a1f26) padding-box,
+      linear-gradient(135deg, #2fa8ff, #a855f7) border-box;
+    border: 2px solid transparent;
+  }
+  .komo-gradient-ring {
+    background: linear-gradient(#1a1f26, #1a1f26) padding-box,
+      linear-gradient(135deg, #2fa8ff, #a855f7) border-box;
+    border: 3px solid transparent;
+  }
+  .komo-surface {
+    background-color: #1a1f26;
+  }
+  .komo-surface-2 {
+    background-color: #202632;
+  }
+  .komo-card-shadow {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    border: 1px solid #2a313c;
+  }
+  .glass-effect {
+    background: rgba(26, 31, 38, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid #2a313c;
+  }
+  .glass-nav {
+    background: rgba(26, 31, 38, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid #2a313c;
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 6s linear infinite;
+}
