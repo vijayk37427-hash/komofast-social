@@ -7,7 +7,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, CheckCircle2, HelpCircle, Search } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  ChevronRight,
+  ClipboardList,
+  HelpCircle,
+  Search,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -346,6 +353,43 @@ export default function HelpCenter() {
             </p>
           </motion.div>
         )}
+
+        {/* Formal Complaint CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.15 }}
+          data-ocid="help.complaint.card"
+          className="rounded-2xl overflow-hidden cursor-pointer"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(239,68,68,0.08), rgba(168,85,247,0.12))",
+            border: "1px solid rgba(239,68,68,0.25)",
+          }}
+          onClick={() => navigate("/complaints")}
+        >
+          <div className="flex items-center gap-4 p-4">
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(239,68,68,0.2), rgba(168,85,247,0.25))",
+              }}
+            >
+              <ClipboardList size={22} className="text-red-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-bold text-white">
+                File a Formal Complaint
+              </p>
+              <p className="text-[11px] text-white/50 mt-0.5 leading-snug">
+                For serious violations, harassment, or legal complaints.
+                Processed under IT Act 2000.
+              </p>
+            </div>
+            <ChevronRight size={18} className="text-white/35 flex-shrink-0" />
+          </div>
+        </motion.div>
 
         {/* Bottom CTA */}
         <motion.div

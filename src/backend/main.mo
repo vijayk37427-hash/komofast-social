@@ -12,15 +12,15 @@ import Float "mo:core/Float";
 import Int "mo:core/Int";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
-import MixinStorage "blob-storage/Mixin";
-import Storage "blob-storage/Storage";
-import MixinAuthorization "authorization/MixinAuthorization";
-import AccessControl "authorization/access-control";
+import MixinObjectStorage "mo:caffeineai-object-storage/Mixin";
+import Storage "mo:caffeineai-object-storage/Storage";
+import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
+import AccessControl "mo:caffeineai-authorization/access-control";
 
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
-  include MixinStorage();
+  include MixinObjectStorage();
 
   // Types
   module Notification {

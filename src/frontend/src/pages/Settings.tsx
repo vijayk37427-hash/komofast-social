@@ -1,9 +1,7 @@
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -11,6 +9,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -21,10 +20,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft,
   Bell,
   ChevronRight,
+  Download,
   FileText,
   Globe,
   HelpCircle,
@@ -39,6 +40,7 @@ import {
   ShieldCheck,
   Smartphone,
   Trash2,
+  Undo2,
   User,
   UserMinus,
   UserX,
@@ -136,8 +138,465 @@ function Divider() {
   return <div className="mx-4 h-px bg-white/5" />;
 }
 
+// ── Deactivate Dialog ──────────────────────────────────────────────────
+function DeactivateDialog({ lang }: { lang: "en" | "hi" }) {
+  const [open, setOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const isHi = lang === "hi";
+
+  const handleDeactivate = () => {
+    if (confirmText !== "DEACTIVATE") {
+      toast.error(
+        isHi ? "कृपया DEACTIVATE टाइप करें" : "Please type DEACTIVATE to confirm",
+      );
+      return;
+    }
+    setOpen(false);
+    setConfirmText("");
+    toast.warning(
+      isHi
+        ? "अकाउंट 30 दिनों के लिए निष्क्रिय कर दिया गया"
+        : "Account deactivated for 30 days",
+    );
+  };
+
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
+        <Button
+          data-ocid="settings.deactivate.button"
+          size="sm"
+          variant="outline"
+          className="border-orange-700/50 text-orange-400 hover:bg-orange-900/20 h-8 text-[12px] px-4"
+        >
+          {isHi ? "निष्क्रिय करें" : "Deactivate"}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent className="bg-[#1A1F26] border-orange-900/40 max-w-sm mx-4">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="text-white text-[16px]">
+            {isHi ? "अकाउंट निष्क्रिय करें?" : "Deactivate Account?"}
+          </AlertDialogTitle>
+        </AlertDialogHeader>
+        <div className="space-y-4 py-2">
+          <div
+            className="p-3 rounded-xl"
+            style={{
+              background: "rgba(251,146,60,0.08)",
+              border: "1px solid rgba(251,146,60,0.2)",
+            }}
+          >
+            <p className="text-[12px] text-orange-300/90 leading-relaxed">
+              {isHi
+                ? "आपका अकाउंट 30 दिनों के लिए छिपा दिया जाएगा। लॉग इन करके इसे पुनः सक्रिय कर सकते हैं।"
+                : "Your account will be hidden for 30 days. You can reactivate it by logging back in at any time."}
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[12px] text-white/60">
+              {isHi
+                ? "कन्फर्म करने के लिए DEACTIVATE टाइप करें"
+                : "Type DEACTIVATE to confirm"}
+            </Label>
+            <Input
+              data-ocid="settings.deactivate.confirm_input"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="DEACTIVATE"
+              className="bg-white/5 border-white/10 text-white placeholder:text-white/25 h-9 text-[13px] font-mono"
+            />
+          </div>
+        </div>
+        <AlertDialogFooter className="flex gap-2">
+          <AlertDialogCancel
+            className="flex-1 bg-white/5 border-white/10 text-white hover:bg-white/10 h-9 text-[13px]"
+            onClick={() => setConfirmText("")}
+          >
+            {isHi ? "रद्द करें" : "Cancel"}
+          </AlertDialogCancel>
+          <Button
+            data-ocid="settings.deactivate.confirm_button"
+            size="sm"
+            disabled={confirmText !== "DEACTIVATE"}
+            onClick={handleDeactivate}
+            className="flex-1 h-9 text-[13px] text-white border-0"
+            style={{
+              background:
+                confirmText === "DEACTIVATE"
+                  ? "#f97316"
+                  : "rgba(249,115,22,0.3)",
+            }}
+          >
+            {isHi ? "निष्क्रिय करें" : "Deactivate"}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+// ── Delete Account multi-step ──────────────────────────────────────────
+function DeleteAccountFlow({
+  lang,
+  navigate,
+}: { lang: "en" | "hi"; navigate: (p: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [step, setStep] = useState(1);
+  const [surveyReason, setSurveyReason] = useState("");
+  const [surveyFeedback, setSurveyFeedback] = useState("");
+  const [deleteText, setDeleteText] = useState("");
+  const [understood, setUnderstood] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleted, setDeleted] = useState(false);
+  const [countdown] = useState(30);
+  const isHi = lang === "hi";
+
+  const REASONS = [
+    { en: "Too many notifications", hi: "बहुत अधिक सूचनाएं" },
+    { en: "Privacy concerns", hi: "गोपनीयता संबंधी चिंताएं" },
+    { en: "Found a better app", hi: "बेहतर ऐप मिली" },
+    { en: "Not useful anymore", hi: "अब उपयोगी नहीं" },
+    { en: "Other", hi: "अन्य" },
+  ];
+
+  const resetAll = () => {
+    setStep(1);
+    setSurveyReason("");
+    setSurveyFeedback("");
+    setDeleteText("");
+    setUnderstood(false);
+    setDeleting(false);
+    setDeleted(false);
+  };
+
+  const handleOpen = (v: boolean) => {
+    if (!v) resetAll();
+    setOpen(v);
+  };
+
+  const handleFinalDelete = () => {
+    if (deleteText !== "DELETE" || !understood) return;
+    setDeleting(true);
+    setTimeout(() => {
+      setDeleting(false);
+      setDeleted(true);
+    }, 1200);
+  };
+
+  const canConfirm = deleteText === "DELETE" && understood;
+
+  return (
+    <AlertDialog open={open} onOpenChange={handleOpen}>
+      <AlertDialogTrigger asChild>
+        <Button
+          data-ocid="settings.delete_account.open_modal_button"
+          size="sm"
+          className="bg-red-600 hover:bg-red-700 text-white h-8 text-[12px] px-4 border-0"
+        >
+          <Trash2 size={13} className="mr-1" /> {isHi ? "डिलीट" : "Delete"}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent
+        data-ocid="settings.delete_account.dialog"
+        className="bg-[#1A1F26] border-red-900/40 max-w-sm mx-4"
+      >
+        {/* Step indicators */}
+        {!deleted && (
+          <div className="flex items-center gap-1.5 mb-1">
+            {[1, 2, 3].map((s) => (
+              <div
+                key={s}
+                className="h-1 flex-1 rounded-full transition-all"
+                style={{
+                  background:
+                    s <= step
+                      ? "linear-gradient(90deg, #ef4444, #dc2626)"
+                      : "rgba(255,255,255,0.1)",
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* ─ Step 1: Warning ─ */}
+        {step === 1 && !deleted && (
+          <>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-red-400 text-[16px]">
+                ⚠️ {isHi ? "अकाउंट डिलीट करें?" : "Delete Account?"}
+              </AlertDialogTitle>
+            </AlertDialogHeader>
+            <div className="space-y-3 py-1">
+              <div
+                className="p-3 rounded-xl"
+                style={{
+                  background: "rgba(239,68,68,0.08)",
+                  border: "1px solid rgba(239,68,68,0.25)",
+                }}
+              >
+                <p className="text-[12px] text-red-300 font-semibold mb-2">
+                  {isHi
+                    ? "इन्हें हमेशा के लिए मिटा दिया जाएगा:"
+                    : "The following will be permanently deleted:"}
+                </p>
+                {[
+                  isHi
+                    ? "सभी पोस्ट, रील्स और स्टोरीज़"
+                    : "All posts, reels, and stories",
+                  isHi ? "आपके सभी संदेश और चैट" : "All messages and chat history",
+                  isHi
+                    ? "आपके फॉलोअर्स और फॉलोइंग"
+                    : "Your followers & following list",
+                  isHi ? "वॉलेट बैलेंस और KomoCoin" : "Wallet balance & KomoCoins",
+                  isHi
+                    ? "सभी डेटा और खाता इतिहास"
+                    : "All data and account history",
+                ].map((item) => (
+                  <div key={item} className="flex items-start gap-2 mb-1">
+                    <span className="text-red-400 text-[12px] mt-0.5">•</span>
+                    <p className="text-[12px] text-red-300/80">{item}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] text-white/40 flex items-center gap-1.5">
+                <Shield size={11} />
+                {isHi
+                  ? "IT अधिनियम 2000 के अनुसार डेटा डिलीट होगा"
+                  : "Data deletion in accordance with IT Act 2000"}
+              </p>
+            </div>
+            <AlertDialogFooter className="flex gap-2">
+              <AlertDialogCancel
+                className="flex-1 bg-white/5 border-white/10 text-white hover:bg-white/10 h-9 text-[13px]"
+                onClick={resetAll}
+              >
+                {isHi ? "रद्द करें" : "Cancel"}
+              </AlertDialogCancel>
+              <Button
+                data-ocid="settings.delete_account.step1_continue"
+                size="sm"
+                onClick={() => setStep(2)}
+                className="flex-1 h-9 text-[13px] text-white border-0 bg-red-600 hover:bg-red-700"
+              >
+                {isHi ? "आगे बढ़ें" : "Continue"}
+              </Button>
+            </AlertDialogFooter>
+          </>
+        )}
+
+        {/* ─ Step 2: Survey ─ */}
+        {step === 2 && !deleted && (
+          <>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-white text-[15px]">
+                {isHi ? "आप क्यों जा रहे हैं?" : "Why are you leaving?"}
+              </AlertDialogTitle>
+            </AlertDialogHeader>
+            <div className="space-y-4 py-1">
+              <Select value={surveyReason} onValueChange={setSurveyReason}>
+                <SelectTrigger
+                  data-ocid="settings.delete_survey.reason_select"
+                  className="bg-white/5 border-white/10 text-white h-10 text-[13px]"
+                >
+                  <SelectValue
+                    placeholder={
+                      isHi ? "कारण चुनें (वैकल्पिक)" : "Select a reason (optional)"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1A1F26] border-white/10">
+                  {REASONS.map((r) => (
+                    <SelectItem
+                      key={r.en}
+                      value={r.en}
+                      className="text-white/80 text-[13px]"
+                    >
+                      {isHi ? r.hi : r.en}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Textarea
+                data-ocid="settings.delete_survey.feedback_input"
+                placeholder={
+                  isHi
+                    ? "अतिरिक्त प्रतिक्रिया (वैकल्पिक)…"
+                    : "Additional feedback (optional)…"
+                }
+                value={surveyFeedback}
+                onChange={(e) => setSurveyFeedback(e.target.value)}
+                rows={3}
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/25 text-[13px] resize-none"
+              />
+            </div>
+            <AlertDialogFooter className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setStep(1)}
+                className="flex-1 h-9 text-[13px] border-white/15 text-white/60 hover:bg-white/5"
+              >
+                {isHi ? "वापस" : "Back"}
+              </Button>
+              <Button
+                data-ocid="settings.delete_account.step2_next"
+                size="sm"
+                onClick={() => setStep(3)}
+                className="flex-1 h-9 text-[13px] text-white border-0 bg-red-600 hover:bg-red-700"
+              >
+                {isHi ? "अगला" : "Next"}
+              </Button>
+            </AlertDialogFooter>
+          </>
+        )}
+
+        {/* ─ Step 3: Final confirmation ─ */}
+        {step === 3 && !deleted && (
+          <>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-red-400 text-[15px]">
+                {isHi ? "अंतिम पुष्टि करें" : "Final Confirmation"}
+              </AlertDialogTitle>
+            </AlertDialogHeader>
+            <div className="space-y-4 py-1">
+              <div className="space-y-1.5">
+                <Label className="text-[12px] text-white/60">
+                  {isHi
+                    ? 'कन्फर्म करने के लिए "DELETE" टाइप करें'
+                    : 'Type "DELETE" to confirm'}
+                </Label>
+                <Input
+                  data-ocid="settings.delete_account.final_confirm_input"
+                  value={deleteText}
+                  onChange={(e) => setDeleteText(e.target.value.toUpperCase())}
+                  placeholder="DELETE"
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/25 h-9 text-[13px] font-mono"
+                />
+              </div>
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  data-ocid="settings.delete_account.understood_checkbox"
+                  id="understood"
+                  checked={understood}
+                  onCheckedChange={(v) => setUnderstood(!!v)}
+                  className="mt-0.5 border-white/30"
+                />
+                <label
+                  htmlFor="understood"
+                  className="text-[12px] text-white/60 leading-relaxed cursor-pointer"
+                >
+                  {isHi
+                    ? "मैं समझता/समझती हूं कि 30 दिनों के बाद मेरा सारा डेटा स्थायी रूप से मिटा दिया जाएगा"
+                    : "I understand all my data will be permanently deleted after 30 days"}
+                </label>
+              </div>
+            </div>
+            <AlertDialogFooter className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setStep(2)}
+                className="flex-1 h-9 text-[13px] border-white/15 text-white/60 hover:bg-white/5"
+              >
+                {isHi ? "वापस" : "Back"}
+              </Button>
+              <Button
+                data-ocid="settings.delete_account.final_delete_button"
+                size="sm"
+                disabled={!canConfirm || deleting}
+                onClick={handleFinalDelete}
+                className="flex-1 h-9 text-[13px] text-white border-0"
+                style={{
+                  background:
+                    canConfirm && !deleting ? "#dc2626" : "rgba(220,38,38,0.3)",
+                }}
+              >
+                {deleting
+                  ? isHi
+                    ? "हो रहा है…"
+                    : "Deleting…"
+                  : isHi
+                    ? "हमेशा के लिए डिलीट करें"
+                    : "Delete Forever"}
+              </Button>
+            </AlertDialogFooter>
+          </>
+        )}
+
+        {/* ─ Step 4: Success / Undo ─ */}
+        {deleted && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="space-y-4 py-2"
+          >
+            <div className="text-center space-y-2">
+              <div className="text-4xl">⏳</div>
+              <h3 className="text-[16px] font-bold text-white">
+                {isHi
+                  ? "अकाउंट डिलीशन शेड्यूल हो गया"
+                  : "Account Scheduled for Deletion"}
+              </h3>
+              <div
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full"
+                style={{
+                  background: "rgba(239,68,68,0.15)",
+                  border: "1px solid rgba(239,68,68,0.3)",
+                }}
+              >
+                <span className="text-[13px] font-bold text-red-400">
+                  {countdown} days remaining
+                </span>
+              </div>
+            </div>
+            <p className="text-[12px] text-white/55 text-center leading-relaxed">
+              {isHi
+                ? "30 दिनों के भीतर वापस लॉग इन करके डिलीशन रद्द कर सकते हैं।"
+                : "You can log back in within 30 days to cancel deletion."}
+            </p>
+            <div className="space-y-2">
+              <Button
+                data-ocid="settings.delete_account.undo_button"
+                onClick={() => {
+                  handleOpen(false);
+                  toast.success(
+                    isHi
+                      ? "अकाउंट डिलीशन रद्द कर दिया गया ✅"
+                      : "Account deletion cancelled ✅",
+                  );
+                }}
+                className="w-full h-10 text-[13px] font-bold text-white border-0"
+                style={{
+                  background: "linear-gradient(135deg, #16a34a, #15803d)",
+                }}
+              >
+                <Undo2 size={15} className="mr-2" />
+                {isHi ? "डिलीशन रद्द करें (Undo)" : "Undo Deletion"}
+              </Button>
+              <Button
+                data-ocid="settings.delete_account.download_data_button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  handleOpen(false);
+                  navigate("/privacy-center");
+                }}
+                className="w-full h-9 text-[12px] border-white/15 text-white/60 hover:bg-white/5 flex items-center gap-2"
+              >
+                <Download size={13} />
+                {isHi ? "मेरा डेटा डाउनलोड करें" : "Download My Data"}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 export default function Settings() {
   const { navigate, logout } = useApp();
+  const [lang, setLang] = useState<"en" | "hi">("en");
 
   // Account
   const [editingProfile, setEditingProfile] = useState(false);
@@ -241,12 +700,20 @@ export default function Settings() {
         >
           <ArrowLeft size={18} className="text-white" />
         </button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-[20px] font-bold text-white leading-tight">
             Settings
           </h1>
           <p className="text-[12px] text-komo-text-muted">सेटिंग्स</p>
         </div>
+        <button
+          type="button"
+          data-ocid="settings.lang.toggle"
+          onClick={() => setLang((l) => (l === "en" ? "hi" : "en"))}
+          className="px-3 py-1.5 rounded-full text-[12px] font-semibold border border-white/20 bg-white/5 hover:bg-white/10 text-white transition-colors"
+        >
+          {lang === "en" ? "हिंदी" : "English"}
+        </button>
       </div>
 
       {/* ── ACCOUNT SETTINGS ── */}
@@ -316,9 +783,7 @@ export default function Settings() {
             </motion.div>
           )}
         </div>
-
         <Divider />
-
         {/* Change Password */}
         <div>
           <SettingRow
@@ -340,42 +805,41 @@ export default function Settings() {
               transition={{ duration: 0.2 }}
               className="px-4 pb-4 space-y-3"
             >
-              <div className="space-y-1">
-                <Label className="text-[11px] text-komo-text-muted">
-                  Current Password
-                </Label>
-                <Input
-                  data-ocid="settings.current_password.input"
-                  type="password"
-                  value={currentPwd}
-                  onChange={(e) => setCurrentPwd(e.target.value)}
-                  className="bg-white/5 border-white/10 text-white h-9 text-[13px]"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[11px] text-komo-text-muted">
-                  New Password
-                </Label>
-                <Input
-                  data-ocid="settings.new_password.input"
-                  type="password"
-                  value={newPwd}
-                  onChange={(e) => setNewPwd(e.target.value)}
-                  className="bg-white/5 border-white/10 text-white h-9 text-[13px]"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[11px] text-komo-text-muted">
-                  Confirm New Password
-                </Label>
-                <Input
-                  data-ocid="settings.confirm_password.input"
-                  type="password"
-                  value={confirmPwd}
-                  onChange={(e) => setConfirmPwd(e.target.value)}
-                  className="bg-white/5 border-white/10 text-white h-9 text-[13px]"
-                />
-              </div>
+              {[
+                {
+                  label: "Current Password",
+                  ocid: "settings.current_password.input",
+                  val: currentPwd,
+                  set: setCurrentPwd,
+                },
+                {
+                  label: "New Password",
+                  ocid: "settings.new_password.input",
+                  val: newPwd,
+                  set: setNewPwd,
+                },
+                {
+                  label: "Confirm New Password",
+                  ocid: "settings.confirm_password.input",
+                  val: confirmPwd,
+                  set: setConfirmPwd,
+                },
+              ].map((f) => (
+                <div key={f.label} className="space-y-1">
+                  <Label className="text-[11px] text-komo-text-muted">
+                    {f.label}
+                  </Label>
+                  <Input
+                    data-ocid={f.ocid}
+                    type="password"
+                    value={f.val}
+                    onChange={(e) =>
+                      (f.set as (v: string) => void)(e.target.value)
+                    }
+                    className="bg-white/5 border-white/10 text-white h-9 text-[13px]"
+                  />
+                </div>
+              ))}
               <Button
                 data-ocid="settings.save_password.submit_button"
                 size="sm"
@@ -387,10 +851,7 @@ export default function Settings() {
             </motion.div>
           )}
         </div>
-
         <Divider />
-
-        {/* Mobile/Email */}
         <SettingRow
           ocid="settings.mobile.button"
           icon={<Phone size={15} className="text-green-400" />}
@@ -407,10 +868,7 @@ export default function Settings() {
             </Button>
           }
         />
-
         <Divider />
-
-        {/* Verified Account */}
         <SettingRow
           icon={<ShieldCheck size={15} className="text-komo-blue" />}
           label="Verified Account"
@@ -451,7 +909,6 @@ export default function Settings() {
           }
         />
         <Divider />
-
         {/* Who can message */}
         <div className="flex items-center gap-3 px-4 py-3.5">
           <div
@@ -497,9 +954,7 @@ export default function Settings() {
             </SelectContent>
           </Select>
         </div>
-
         <Divider />
-
         {/* Who can see posts */}
         <div className="flex items-center gap-3 px-4 py-3.5">
           <div
@@ -548,9 +1003,7 @@ export default function Settings() {
             </SelectContent>
           </Select>
         </div>
-
         <Divider />
-
         <SettingRow
           ocid="settings.two_fa.switch"
           icon={<Shield size={15} className="text-yellow-400" />}
@@ -566,9 +1019,7 @@ export default function Settings() {
             />
           }
         />
-
         <Divider />
-
         {/* Active Sessions */}
         <div className="px-4 py-3.5">
           <div className="flex items-center gap-3 mb-3">
@@ -642,7 +1093,7 @@ export default function Settings() {
                 "linear-gradient(135deg, rgba(47,168,255,0.18), rgba(168,85,247,0.22))",
             }}
           >
-            <span className="text-[14px]">2728</span>
+            <span className="text-[14px]">✨</span>
           </div>
           <div className="flex-1">
             <span className="text-[13px] font-medium text-white/80">
@@ -734,7 +1185,6 @@ export default function Settings() {
       {/* ── APP PREFERENCES ── */}
       <SectionHeader title="App Preferences" />
       <SectionCard>
-        {/* Dark Mode — always on */}
         <SettingRow
           icon={<Monitor size={15} className="text-komo-blue" />}
           label="Dark Mode"
@@ -749,8 +1199,6 @@ export default function Settings() {
           }
         />
         <Divider />
-
-        {/* Language */}
         <SettingRow
           ocid="settings.language.link"
           icon={<Globe size={15} className="text-green-400" />}
@@ -759,8 +1207,6 @@ export default function Settings() {
           onClick={() => navigate("/language")}
         />
         <Divider />
-
-        {/* Country Detection */}
         <SettingRow
           ocid="settings.country.link"
           icon={<span className="text-[14px]">📍</span>}
@@ -769,7 +1215,6 @@ export default function Settings() {
           onClick={() => navigate("/country-detect")}
         />
         <Divider />
-
         <SettingRow
           ocid="settings.data_saver.switch"
           icon={<Volume2 size={15} className="text-komo-purple" />}
@@ -786,7 +1231,6 @@ export default function Settings() {
           }
         />
         <Divider />
-
         <SettingRow
           ocid="settings.autoplay.switch"
           icon={<span className="text-[14px]">▶️</span>}
@@ -825,7 +1269,6 @@ export default function Settings() {
           }
         />
         <Divider />
-
         {/* Muted Words */}
         <div className="px-4 py-3.5">
           <div className="flex items-center gap-3 mb-3">
@@ -840,8 +1283,6 @@ export default function Settings() {
             </div>
             <p className="text-[13px] font-medium text-white/80">Muted Words</p>
           </div>
-
-          {/* Word chips */}
           {mutedWords.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
               {mutedWords.map((w) => (
@@ -868,7 +1309,6 @@ export default function Settings() {
               ))}
             </div>
           )}
-
           <div className="flex gap-2">
             <Input
               data-ocid="settings.muted_word.input"
@@ -888,9 +1328,7 @@ export default function Settings() {
             </Button>
           </div>
         </div>
-
         <Divider />
-
         {/* Restricted Accounts */}
         <div className="px-4 py-3.5">
           <div className="flex items-center gap-3 mb-3">
@@ -1004,6 +1442,18 @@ export default function Settings() {
             icon: <span className="text-[14px]">📋</span>,
             ocid: "settings.community.link",
           },
+          {
+            label: "Content Rules",
+            path: "/content-rules",
+            icon: <span className="text-[14px]">📖</span>,
+            ocid: "settings.content_rules.link",
+          },
+          {
+            label: "File a Complaint",
+            path: "/complaints",
+            icon: <span className="text-[14px]">📝</span>,
+            ocid: "settings.complaints.link",
+          },
         ].map((item, i, arr) => (
           <div key={item.path}>
             <button
@@ -1047,22 +1497,11 @@ export default function Settings() {
               Deactivate Account
             </p>
             <p className="text-[11px] text-komo-text-muted">
-              Temporarily disable your account
+              Temporarily hide your account for 30 days / अकाउंट 30 दिन के लिए
+              छिपाएं
             </p>
           </div>
-          <Button
-            data-ocid="settings.deactivate.button"
-            size="sm"
-            variant="outline"
-            className="border-orange-700/50 text-orange-400 hover:bg-orange-900/20 h-8 text-[12px] px-4"
-            onClick={() =>
-              toast.warning(
-                "Account deactivation coming soon. Contact support for help.",
-              )
-            }
-          >
-            Deactivate
-          </Button>
+          <DeactivateDialog lang={lang} />
         </div>
 
         <Divider />
@@ -1080,55 +1519,10 @@ export default function Settings() {
               Delete Account
             </p>
             <p className="text-[11px] text-komo-text-muted">
-              Permanently delete all data
+              30-day grace period — data erased after / 30 दिन बाद डेटा मिटेगा
             </p>
           </div>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                data-ocid="settings.delete_account.open_modal_button"
-                size="sm"
-                className="bg-red-600 hover:bg-red-700 text-white h-8 text-[12px] px-4 border-0"
-              >
-                <Trash2 size={13} className="mr-1" /> Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent
-              data-ocid="settings.delete_account.dialog"
-              className="bg-[#1A1F26] border-red-900/40"
-            >
-              <AlertDialogHeader>
-                <AlertDialogTitle className="text-white">
-                  Delete Account?
-                </AlertDialogTitle>
-                <AlertDialogDescription className="text-komo-text-muted">
-                  This will permanently delete your Komofast account, all posts,
-                  reels, earnings, and data. This action{" "}
-                  <span className="text-red-400 font-semibold">cannot</span> be
-                  undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel
-                  data-ocid="settings.delete_account.cancel_button"
-                  className="bg-white/5 border-white/10 text-white hover:bg-white/10"
-                >
-                  Cancel
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  data-ocid="settings.delete_account.confirm_button"
-                  className="bg-red-600 hover:bg-red-700 text-white"
-                  onClick={() => {
-                    toast.error(
-                      "Account deletion request submitted. You will receive an email.",
-                    );
-                  }}
-                >
-                  Yes, Delete Everything
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <DeleteAccountFlow lang={lang} navigate={navigate} />
         </div>
 
         <Divider />

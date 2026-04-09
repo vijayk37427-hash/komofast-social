@@ -1,0 +1,198 @@
+type _ImmutableObjectStorageRefillResult = 
+ record {
+   success: opt bool;
+   topped_up_amount: opt nat;
+ };
+type _ImmutableObjectStorageRefillInformation = record {
+                                                  proposed_top_up_amount:
+                                                   opt nat;};
+type _ImmutableObjectStorageCreateCertificateResult = 
+ record {
+   blob_hash: text;
+   method: text;
+ };
+type UserRole = 
+ variant {
+   admin;
+   guest;
+   user;
+ };
+type UserProfile = 
+ record {
+   avatarBlobId: opt text;
+   bio: text;
+   createdAt: Time;
+   displayName: text;
+   id: text;
+   isActive: bool;
+   isCreator: bool;
+   username: text;
+ };
+type Time = int;
+type Story = 
+ record {
+   authorId: text;
+   createdAt: Time;
+   expiresAt: Time;
+   id: text;
+   imageBlobId: ExternalBlob;
+   "text": opt text;
+ };
+type Product = 
+ record {
+   category: text;
+   createdAt: Time;
+   description: text;
+   id: text;
+   imageBlobId: opt ExternalBlob;
+   price: float64;
+   sellerId: text;
+   stock: nat;
+   title: text;
+ };
+type Post = 
+ record {
+   approvalStatus: variant {
+                     approved;
+                     pending;
+                     rejected;
+                   };
+   authorId: text;
+   commentsCount: nat;
+   createdAt: Time;
+   id: text;
+   imageBlobId: opt ExternalBlob;
+   likesCount: nat;
+   postType: variant {
+               post;
+               reel;
+             };
+   shareCount: nat;
+   textContent: text;
+   trendingScore: float64;
+ };
+type Order = 
+ record {
+   createdAt: Time;
+   deliveryAddress: text;
+   id: text;
+   items: vec CartItem;
+   status: variant {
+             cancelled;
+             completed;
+             pending;
+           };
+   totalAmount: float64;
+   userId: text;
+ };
+type Notification = 
+ record {
+   actorId: text;
+   createdAt: Time;
+   id: text;
+   isRead: bool;
+   notificationType: variant {
+                       comment;
+                       follow;
+                       like;
+                       subscribe;
+                     };
+   postId: opt text;
+   recipientId: text;
+ };
+type ExternalBlob = blob;
+type Comment = 
+ record {
+   authorId: text;
+   createdAt: Time;
+   id: text;
+   postId: text;
+   "text": text;
+ };
+type CartItem = 
+ record {
+   productId: text;
+   quantity: nat;
+ };
+service : {
+  _immutableObjectStorageBlobsAreLive: (hashes: vec blob) -> (vec bool) query;
+  _immutableObjectStorageBlobsToDelete: () -> (vec blob) query;
+  _immutableObjectStorageConfirmBlobDeletion: (blobs: vec blob) -> ();
+  _immutableObjectStorageCreateCertificate: (blobHash: text) ->
+   (_ImmutableObjectStorageCreateCertificateResult);
+  _immutableObjectStorageRefillCashier: (refillInformation:
+   opt _ImmutableObjectStorageRefillInformation) ->
+   (_ImmutableObjectStorageRefillResult);
+  _immutableObjectStorageUpdateGatewayPrincipals: () -> ();
+  _initializeAccessControl: () -> ();
+  addComment: (postId: text, commentText: text) -> ();
+  addToCart: (productId: text, quantity: nat) -> ();
+  approvePost: (postId: text) -> ();
+  assignCallerUserRole: (user: principal, role: UserRole) -> ();
+  createNotification: (recipientId: text, notificationType:
+   variant {
+     comment;
+     follow;
+     like;
+     subscribe;
+   }, postId: opt text) -> ();
+  createOrder: (deliveryAddress: text) -> ();
+  createPost: (textContent: text, postType: variant {
+                                              post;
+                                              reel;
+                                            }) -> ();
+  createProduct: (title: text, description: text, price: float64, category:
+   text, stock: nat) -> ();
+  createStory: ("blob": ExternalBlob, "text": opt text, expiresAt: Time) ->
+   ();
+  createUserProfile: (username: text, displayName: text, bio: text) -> ();
+  deleteProduct: (productId: text) -> ();
+  followUser: (followeeId: text) -> ();
+  getActiveStories: () -> (vec Story) query;
+  getAllOrders: () -> (vec Order) query;
+  getAllPosts: () -> (vec Post) query;
+  getAllProducts: () -> (vec Product) query;
+  getAllUsers: () -> (vec UserProfile) query;
+  getCallerUserProfile: () -> (opt UserProfile) query;
+  getCallerUserRole: () -> (UserRole) query;
+  getCart: () -> (vec CartItem) query;
+  getCreatorEarnings: () -> (float64) query;
+  getFollowerCount: (userId: text) -> (nat) query;
+  getFollowers: (userId: text) -> (vec text) query;
+  getFollowingCount: (userId: text) -> (nat) query;
+  getFollowings: (userId: text) -> (vec text) query;
+  getFriendSuggestions: () -> (vec UserProfile) query;
+  getMyOrders: () -> (vec Order) query;
+  getPendingPosts: () -> (vec Post) query;
+  getPlatformStats: () ->
+   (record {
+      orderCount: nat;
+      postCount: nat;
+      userCount: nat;
+    }) query;
+  getPostComments: (postId: text) -> (vec Comment) query;
+  getProductsByCategory: (category: text) -> (vec Product) query;
+  getSubscriberCount: (creatorId: text) -> (nat) query;
+  getTotalCommissions: () -> (float64) query;
+  getUnreadNotificationCount: () -> (nat) query;
+  getUserNotifications: () -> (vec Notification) query;
+  getUserPosts: (userId: text) -> (vec Post) query;
+  getUserProfile: (userId: text) -> (opt UserProfile) query;
+  isCallerAdmin: () -> (bool) query;
+  isSubscribedToCreator: (creatorId: text) -> (bool) query;
+  likePost: (postId: text) -> ();
+  listAllUsers: () -> (vec UserProfile) query;
+  markNotificationRead: (notificationId: text) -> ();
+  markStoryViewed: (storyId: text) -> ();
+  rejectPost: (postId: text) -> ();
+  saveCallerUserProfile: (profile: UserProfile) -> ();
+  subscribeToCreator: (creatorId: text) -> ();
+  toggleCreatorStatus: () -> ();
+  toggleUserActiveStatus: (userId: text) -> ();
+  unfollowUser: (followeeId: text) -> ();
+  unlikePost: (postId: text) -> ();
+  unsubscribeFromCreator: (creatorId: text) -> ();
+  updateProduct: (productId: text, title: text, description: text, price:
+   float64, category: text, stock: nat) -> ();
+  updateUserProfile: (displayName: text, bio: text) -> ();
+}

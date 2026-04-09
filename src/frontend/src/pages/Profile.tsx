@@ -939,6 +939,72 @@ export default function Profile() {
         )}
       </AnimatePresence>
 
+      {/* AI Tools Section */}
+      {isOwnProfile && (
+        <div
+          className="mt-4 rounded-2xl overflow-hidden"
+          style={{
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <div className="px-4 py-3 border-b border-white/5">
+            <p className="text-[12px] font-semibold text-white/50 uppercase tracking-wider">
+              🤖 AI Tools
+            </p>
+          </div>
+          {[
+            {
+              label: "AI Voice Bot",
+              sublabel: "AI Call Assistant",
+              path: "/ai-voice-bot",
+              emoji: "📞",
+              color: "#2fa8ff",
+            },
+            {
+              label: "AI Customer Support",
+              sublabel: "Smart Chatbot",
+              path: "/ai-support-chat",
+              emoji: "🎧",
+              color: "#a855f7",
+            },
+            {
+              label: "AI Sales Chat",
+              sublabel: "Sales & Offers",
+              path: "/ai-sales-chat",
+              emoji: "💼",
+              color: "#f59e0b",
+            },
+          ].map((item, idx, arr) => (
+            <button
+              key={item.path}
+              type="button"
+              onClick={() => navigate(item.path)}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors ${idx < arr.length - 1 ? "border-b border-white/5" : ""}`}
+            >
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[16px] flex-shrink-0"
+                style={{
+                  background: `${item.color}22`,
+                  border: `1px solid ${item.color}44`,
+                }}
+              >
+                {item.emoji}
+              </div>
+              <div className="flex-1">
+                <span className="text-[13px] font-medium text-white/80 block">
+                  {item.label}
+                </span>
+                <span className="text-[11px] text-white/40">
+                  {item.sublabel}
+                </span>
+              </div>
+              <ChevronRight size={15} className="text-white/30" />
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Support & Legal Links */}
       {isOwnProfile && (
         <div
@@ -1024,6 +1090,18 @@ export default function Profile() {
               path: "/community-guidelines",
               emoji: "📋",
               ocid: "profile.community_guidelines.link",
+            },
+            {
+              label: "Content Rules",
+              path: "/content-rules",
+              emoji: "📖",
+              ocid: "profile.content_rules.link",
+            },
+            {
+              label: "File a Complaint",
+              path: "/complaints",
+              emoji: "📝",
+              ocid: "profile.complaints.link",
             },
           ].map((item, idx, arr) => (
             <button

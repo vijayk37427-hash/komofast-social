@@ -1,3 +1,4 @@
+import { useActor } from "@caffeineai/core-infrastructure";
 import {
   type ReactNode,
   createContext,
@@ -5,8 +6,31 @@ import {
   useEffect,
   useState,
 } from "react";
-import type { UserProfile, UserRole } from "../backend.d";
-import { useActor } from "../hooks/useActor";
+import { createActor } from "../backend";
+
+type ActorMethods = {
+  getCallerUserProfile: () => Promise<UserProfile | null>;
+  isCallerAdmin: () => Promise<boolean>;
+  getCallerUserRole: () => Promise<string>;
+  getUnreadNotificationCount: () => Promise<bigint>;
+  getCart: () => Promise<Array<unknown>>;
+};
+
+// Local type definitions to replace missing backend.d types
+export type UserProfile = {
+  id: string;
+  username: string;
+  displayName: string;
+  bio: string;
+  isCreator: boolean;
+  profilePicture: string[];
+  followerCount: bigint;
+  followingCount: bigint;
+  postCount: bigint;
+  createdAt: bigint;
+};
+
+export type UserRole = "admin" | "user" | "creator";
 
 export type ReportedItem = {
   id: string;
@@ -134,7 +158,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
   ]);
 
-  const { actor, isFetching } = useActor();
+  const { actor: rawActor, isFetching } = useActor(createActor);
+  const actor = rawActor as unknown as ActorMethods | null;
 
   // Force dark mode
   useEffect(() => {
@@ -169,7 +194,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .then(([profile, adminStatus, role, notifCount, cart]) => {
         setCurrentUser(profile);
         setIsAdmin(adminStatus);
-        setUserRole(role);
+        setUserRole(role as UserRole);
         setUnreadNotifs(Number(notifCount));
         setCartCount(cart.length);
       })

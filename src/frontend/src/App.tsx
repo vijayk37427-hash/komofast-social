@@ -54,6 +54,11 @@ const MerchStore = lazy(() => import("./pages/MerchStore"));
 const AdsTargeting = lazy(() => import("./pages/AdsTargeting"));
 const MonetizationHub = lazy(() => import("./pages/MonetizationHub"));
 const AIMusicStudio = lazy(() => import("./pages/AIMusicStudio"));
+const AIVoiceBot = lazy(() => import("./pages/AIVoiceBot"));
+const AICustomerSupport = lazy(() => import("./pages/AICustomerSupport"));
+const AISalesChat = lazy(() => import("./pages/AISalesChat"));
+const ComplaintSystem = lazy(() => import("./pages/ComplaintSystem"));
+const ContentRules = lazy(() => import("./pages/ContentRules"));
 
 function PageLoader() {
   return (
@@ -67,6 +72,7 @@ function Router() {
   const { currentPath, isLoggedIn, cameraReelOpen, setCameraReelOpen } =
     useApp();
 
+  // Public routes (accessible without login)
   if (currentPath === "/privacy-policy") {
     return (
       <Suspense fallback={<PageLoader />}>
@@ -123,6 +129,20 @@ function Router() {
       </Suspense>
     );
   }
+  if (currentPath === "/complaints") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <ComplaintSystem />
+      </Suspense>
+    );
+  }
+  if (currentPath === "/content-rules") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <ContentRules />
+      </Suspense>
+    );
+  }
 
   if (!isLoggedIn) {
     return <Login />;
@@ -163,6 +183,11 @@ function Router() {
     if (currentPath === "/ads-targeting") return <AdsTargeting />;
     if (currentPath === "/monetization") return <MonetizationHub />;
     if (currentPath === "/ai-music-studio") return <AIMusicStudio />;
+    if (currentPath === "/ai-voice-bot") return <AIVoiceBot />;
+    if (currentPath === "/ai-support-chat") return <AICustomerSupport />;
+    if (currentPath === "/ai-sales-chat") return <AISalesChat />;
+    if (currentPath === "/complaints") return <ComplaintSystem />;
+    if (currentPath === "/content-rules") return <ContentRules />;
     return <Home />;
   };
 

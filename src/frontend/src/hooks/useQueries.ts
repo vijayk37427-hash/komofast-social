@@ -1,17 +1,90 @@
+import { useActor } from "@caffeineai/core-infrastructure";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type {
-  CartItem,
-  Notification,
-  Order,
-  Post,
-  Product,
-  UserProfile,
-} from "../backend.d";
-import { Variant_post_reel } from "../backend.d";
-import { useActor } from "./useActor";
+import { createActor } from "../backend";
+import type { UserProfile } from "../context/AppContext";
+
+// Local type stubs for types not in backend.d
+export type Post = {
+  id: string;
+  text: string;
+  type: string;
+  [key: string]: unknown;
+};
+export type Product = {
+  id: string;
+  title: string;
+  price: number;
+  [key: string]: unknown;
+};
+export type CartItem = {
+  productId: string;
+  quantity: bigint;
+  [key: string]: unknown;
+};
+export type Order = { id: string; address: string; [key: string]: unknown };
+export type Notification = {
+  id: string;
+  message: string;
+  [key: string]: unknown;
+};
+
+// Runtime const AND type for post/reel variant (dual declaration pattern)
+export const Variant_post_reel = {
+  post: "post" as const,
+  reel: "reel" as const,
+};
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export type Variant_post_reel = "post" | "reel";
+
+// Typed actor interface (backend.d.ts is empty so we define methods locally)
+type ActorMethods = {
+  getAllPosts: () => Promise<Post[]>;
+  getUserPosts: (userId: string) => Promise<Post[]>;
+  getAllUsers: () => Promise<UserProfile[]>;
+  getFriendSuggestions: () => Promise<UserProfile[]>;
+  getUserNotifications: () => Promise<Notification[]>;
+  getAllProducts: () => Promise<Product[]>;
+  getCart: () => Promise<CartItem[]>;
+  getMyOrders: () => Promise<Order[]>;
+  getPlatformStats: () => Promise<{
+    postCount: bigint;
+    orderCount: bigint;
+    userCount: bigint;
+  }>;
+  getPendingPosts: () => Promise<Post[]>;
+  getAllOrders: () => Promise<Order[]>;
+  likePost: (postId: string) => Promise<void>;
+  unlikePost: (postId: string) => Promise<void>;
+  addComment: (postId: string, text: string) => Promise<void>;
+  createPost: (text: string, type: Variant_post_reel) => Promise<void>;
+  followUser: (userId: string) => Promise<void>;
+  addToCart: (productId: string, quantity: bigint) => Promise<void>;
+  createOrder: (address: string) => Promise<void>;
+  approvePost: (postId: string) => Promise<void>;
+  rejectPost: (postId: string) => Promise<void>;
+  toggleUserActiveStatus: (userId: string) => Promise<void>;
+  createProduct: (
+    title: string,
+    desc: string,
+    price: number,
+    cat: string,
+    stock: bigint,
+  ) => Promise<void>;
+  deleteProduct: (productId: string) => Promise<void>;
+  getUserProfile: (userId: string) => Promise<UserProfile | null>;
+  getCallerUserProfile: () => Promise<UserProfile | null>;
+  isCallerAdmin: () => Promise<boolean>;
+  getCallerUserRole: () => Promise<string>;
+  getUnreadNotificationCount: () => Promise<bigint>;
+};
+
+function useTypedActor() {
+  const { actor, isFetching } = useActor(createActor);
+  return { actor: actor as unknown as ActorMethods | null, isFetching };
+}
 
 export function useAllPosts() {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching } = useTypedActor();
   return useQuery<Post[]>({
     queryKey: ["posts"],
     queryFn: async () => {
@@ -23,7 +96,7 @@ export function useAllPosts() {
 }
 
 export function useUserPosts(userId: string | undefined) {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching } = useTypedActor();
   return useQuery<Post[]>({
     queryKey: ["userPosts", userId],
     queryFn: async () => {
@@ -35,7 +108,7 @@ export function useUserPosts(userId: string | undefined) {
 }
 
 export function useAllUsers() {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching } = useTypedActor();
   return useQuery<UserProfile[]>({
     queryKey: ["users"],
     queryFn: async () => {
@@ -47,7 +120,7 @@ export function useAllUsers() {
 }
 
 export function useFriendSuggestions() {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching } = useTypedActor();
   return useQuery<UserProfile[]>({
     queryKey: ["suggestions"],
     queryFn: async () => {
@@ -59,7 +132,7 @@ export function useFriendSuggestions() {
 }
 
 export function useNotifications() {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching } = useTypedActor();
   return useQuery<Notification[]>({
     queryKey: ["notifications"],
     queryFn: async () => {
@@ -71,7 +144,7 @@ export function useNotifications() {
 }
 
 export function useAllProducts() {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching } = useTypedActor();
   return useQuery<Product[]>({
     queryKey: ["products"],
     queryFn: async () => {
@@ -83,7 +156,7 @@ export function useAllProducts() {
 }
 
 export function useCart() {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching } = useTypedActor();
   return useQuery<CartItem[]>({
     queryKey: ["cart"],
     queryFn: async () => {
@@ -95,7 +168,7 @@ export function useCart() {
 }
 
 export function useMyOrders() {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching } = useTypedActor();
   return useQuery<Order[]>({
     queryKey: ["orders"],
     queryFn: async () => {
@@ -107,7 +180,7 @@ export function useMyOrders() {
 }
 
 export function usePlatformStats() {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching } = useTypedActor();
   return useQuery<{ postCount: bigint; orderCount: bigint; userCount: bigint }>(
     {
       queryKey: ["platformStats"],
@@ -121,7 +194,7 @@ export function usePlatformStats() {
 }
 
 export function usePendingPosts() {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching } = useTypedActor();
   return useQuery<Post[]>({
     queryKey: ["pendingPosts"],
     queryFn: async () => {
@@ -133,7 +206,7 @@ export function usePendingPosts() {
 }
 
 export function useAllOrders() {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching } = useTypedActor();
   return useQuery<Order[]>({
     queryKey: ["allOrders"],
     queryFn: async () => {
@@ -145,7 +218,7 @@ export function useAllOrders() {
 }
 
 export function useLikePost() {
-  const { actor } = useActor();
+  const { actor } = useTypedActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (postId: string) => {
@@ -157,7 +230,7 @@ export function useLikePost() {
 }
 
 export function useUnlikePost() {
-  const { actor } = useActor();
+  const { actor } = useTypedActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (postId: string) => {
@@ -169,7 +242,7 @@ export function useUnlikePost() {
 }
 
 export function useAddComment() {
-  const { actor } = useActor();
+  const { actor } = useTypedActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ postId, text }: { postId: string; text: string }) => {
@@ -181,7 +254,7 @@ export function useAddComment() {
 }
 
 export function useCreatePost() {
-  const { actor } = useActor();
+  const { actor } = useTypedActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({
@@ -196,7 +269,7 @@ export function useCreatePost() {
 }
 
 export function useFollowUser() {
-  const { actor } = useActor();
+  const { actor } = useTypedActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (userId: string) => {
@@ -208,7 +281,7 @@ export function useFollowUser() {
 }
 
 export function useAddToCart() {
-  const { actor } = useActor();
+  const { actor } = useTypedActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({
@@ -223,7 +296,7 @@ export function useAddToCart() {
 }
 
 export function useCreateOrder() {
-  const { actor } = useActor();
+  const { actor } = useTypedActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (address: string) => {
@@ -238,7 +311,7 @@ export function useCreateOrder() {
 }
 
 export function useApprovePost() {
-  const { actor } = useActor();
+  const { actor } = useTypedActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (postId: string) => {
@@ -250,7 +323,7 @@ export function useApprovePost() {
 }
 
 export function useRejectPost() {
-  const { actor } = useActor();
+  const { actor } = useTypedActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (postId: string) => {
@@ -262,7 +335,7 @@ export function useRejectPost() {
 }
 
 export function useToggleUserActive() {
-  const { actor } = useActor();
+  const { actor } = useTypedActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (userId: string) => {
@@ -274,7 +347,7 @@ export function useToggleUserActive() {
 }
 
 export function useCreateProduct() {
-  const { actor } = useActor();
+  const { actor } = useTypedActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (p: {
@@ -298,7 +371,7 @@ export function useCreateProduct() {
 }
 
 export function useDeleteProduct() {
-  const { actor } = useActor();
+  const { actor } = useTypedActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (productId: string) => {
@@ -310,7 +383,7 @@ export function useDeleteProduct() {
 }
 
 export function useGetUserProfile(userId: string | undefined) {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching } = useTypedActor();
   return useQuery<UserProfile | null>({
     queryKey: ["userProfile", userId],
     queryFn: async () => {
@@ -320,5 +393,3 @@ export function useGetUserProfile(userId: string | undefined) {
     enabled: !!actor && !isFetching && !!userId,
   });
 }
-
-export { Variant_post_reel };
